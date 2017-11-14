@@ -1,6 +1,9 @@
 export const columns=[{
     Header: 'Id',
-    accessor: 'id'
+    accessor: 'id',
+    filterMethod: (filter, row) => {
+        return row[filter.id]===Number(filter.value);
+    }
 }, {
     Header: 'First Name',
     accessor: 'firstName'

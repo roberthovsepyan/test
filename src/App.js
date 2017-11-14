@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
-import Form from './Form';
 import {columns} from './Columns';
 
 const urlSmall='http://www.filltext.com/?rows=32&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D';
@@ -11,10 +10,9 @@ class App extends Component {
     constructor () {
         super();
         this.state= {
-            search: '',
             value: 'small',
             isFetching: false,
-            loading: 'Загрузка...'
+            data: [],
         };
     }
     selectedUser () {
@@ -33,33 +31,33 @@ class App extends Component {
         }
         return (<p>Выберите пользователя</p>);
     }
-    fetchedData () {
-        if (!this.state.data) {
+    choosingData () {
+        if (this.state.data.length<1) {
             return (
-                <div>
+                <div className="info">
                     <h3>Выберите объем данных для таблицы</h3>
                         <form onSubmit={this.fetchData.bind(this)}>
-                            <select value={this.state.value} onChange={this.handleChange.bind(this)}>
+                            <select value={this.state.value} onChange={this.changeValue.bind(this)}>
                               <option value="small">Маленький</option>
                               <option value="large">Большой</option>
                             </select>
                             <button type="submit">Выбрать</button>
                         </form>
+                    {this.handleLoading()}
                 </div>
             )
         }
     }
     handleLoading () {
-        if (this.state.fetching)
-        {return (<p>{this.state.loading}</p>)}
+        if (this.state.isFetching)
+        {return (<p>Загрузка...</p>)}
     }
-    handleChange(e) {
+    changeValue(e) {
         this.setState({value: e.target.value});
-
     }
     fetchData(e) {
         e.preventDefault();
-        this.setState({fetching: true});
+        this.setState({isFetching: true});
         let url='';
         if (this.state.value==='small') {url=urlSmall;}
         else {url=urlLarge;}
@@ -75,14 +73,17 @@ class App extends Component {
     render() {
         return (
             <div>
-                {this.fetchedData()}
-                {this.handleLoading()}
-                <Form />
+                {this.choosingData()}
+                <h2 className="tableHeading">Таблица данных о пользователях</h2>
                 <ReactTable
                     data={this.state.data}
                     columns={columns}
                     pageSizeOptions={[10, 25, 50]}
                     defaultSorted={[{id: 'id'}]}
+                    filterable
+                    defaultFilterMethod={(filter, row) => {
+                        return row[filter.id].toLowerCase().indexOf(filter.value.toLowerCase()) !==-1;
+                    }}
                     getTrProps={(state, rowInfo) => {
                         return {
                             onClick: () => {
@@ -95,11 +96,11 @@ class App extends Component {
                                     state: `${rowInfo.row.state}`,
                                     zip: `${rowInfo.row.zip}`
                                 }
-                            })
+                            });
                         }}
                     }}
                 />
-                <div>
+                <div className="info">
                     {this.selectedUser()}
                 </div>
             </div>
