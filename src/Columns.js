@@ -1,6 +1,7 @@
 export const columns=[{
     Header: 'Id',
     accessor: 'id',
+    //Filters only exact matches.
     filterMethod: (filter, row) => {
         return row[filter.id]===Number(filter.value);
     }

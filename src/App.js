@@ -3,9 +3,6 @@ import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 import {columns} from './Columns';
 
-const urlSmall='http://www.filltext.com/?rows=32&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D';
-const urlLarge='http://www.filltext.com/?rows=1000&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&delay=3&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D';
-
 class App extends Component {
     constructor () {
         super();
@@ -15,6 +12,8 @@ class App extends Component {
             data: [],
         };
     }
+
+    //Shows the selected user on click.
     selectedUser () {
         if (this.state.user) {
             return (
@@ -28,48 +27,60 @@ class App extends Component {
                     Индекс: <b>{this.state.user.zip}</b>
                 </p>
             );
+        } else {
+            return (<p>Выберите пользователя</p>);
         }
-        return (<p>Выберите пользователя</p>);
     }
+
+    //User chooses the data size (not seen after the choice).
     choosingData () {
-        if (this.state.data.length<1) {
+        if (this.state.data.length < 1) {
             return (
                 <div className="info">
                     <h3>Выберите объем данных для таблицы</h3>
-                        <form onSubmit={this.fetchData.bind(this)}>
-                            <select value={this.state.value} onChange={this.changeValue.bind(this)}>
-                              <option value="small">Маленький</option>
-                              <option value="large">Большой</option>
-                            </select>
-                            <button type="submit">Выбрать</button>
-                        </form>
+                    <form onSubmit={this.fetchData.bind(this)}>
+                        <select value={this.state.value} onChange={this.changeValue.bind(this)}>
+                            <option value="small">Маленький</option>
+                            <option value="large">Большой</option>
+                        </select>
+                        <button type="submit">Выбрать</button>
+                    </form>
                     {this.handleLoading()}
                 </div>
             )
         }
     }
+
+    //Shows a loading message while data is being loaded from the server.
     handleLoading () {
         if (this.state.isFetching)
         {return (<p>Загрузка...</p>)}
     }
+
+    //Changes the state of 'value' to handle small or large data size.
     changeValue(e) {
-        this.setState({value: e.target.value});
+        this.setState( {value: e.target.value} );
     }
+
+    //Fetches the data on form submit.
     fetchData(e) {
         e.preventDefault();
-        this.setState({isFetching: true});
-        let url='';
-        if (this.state.value==='small') {url=urlSmall;}
-        else {url=urlLarge;}
+        this.setState( {isFetching: true} );
+        const urlSmall='http://www.filltext.com/?rows=32&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D',
+        urlLarge='http://www.filltext.com/?rows=1000&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&delay=3&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D';
+        let url= this.state.value === 'small' ? urlSmall : urlLarge;
         return fetch(url)
             .then((response) => {
                 if (!response.ok) {
                     throw Error(response.statusText);
-                }
-                return response.json();})
-            .then(response => this.setState({data: response, isFetching: false}))
+                } else {
+                    return response.json();
+                }})
+            //Puts the fetched data in state, and isFetching back to false.
+            .then(response => this.setState( {data: response, isFetching: false} ))
             .catch(err => console.warn(err));
     }
+
     render() {
         return (
             <div>
@@ -78,26 +89,28 @@ class App extends Component {
                 <ReactTable
                     data={this.state.data}
                     columns={columns}
-                    pageSizeOptions={[10, 25, 50]}
-                    defaultSorted={[{id: 'id'}]}
+                    pageSizeOptions={[10, 25, 50]} //User can choose how many rows to display on page.
+                    defaultSorted={[{id: 'id'}]} //Automatically sorts the 'Id' column.
                     filterable
+                    //Filter is case-insensitive.
                     defaultFilterMethod={(filter, row) => {
                         return row[filter.id].toLowerCase().indexOf(filter.value.toLowerCase()) !==-1;
                     }}
                     getTrProps={(state, rowInfo) => {
                         return {
                             onClick: () => {
+                                //Sets the clicked user to state.
                                 this.setState({
-                                user: {
-                                    name: `${rowInfo.row.firstName} ${rowInfo.row.lastName}`,
-                                    description: `${rowInfo.row.description}`,
-                                    street: `${rowInfo.row.streetAddress}`,
-                                    city: `${rowInfo.row.city}`,
-                                    state: `${rowInfo.row.state}`,
-                                    zip: `${rowInfo.row.zip}`
-                                }
-                            });
-                        }}
+                                    user: {
+                                        name: `${rowInfo.row.firstName} ${rowInfo.row.lastName}`,
+                                        description: `${rowInfo.row.description}`,
+                                        street: `${rowInfo.row.streetAddress}`,
+                                        city: `${rowInfo.row.city}`,
+                                        state: `${rowInfo.row.state}`,
+                                        zip: `${rowInfo.row.zip}`
+                                    }
+                                });
+                            }}
                     }}
                 />
                 <div className="info">
